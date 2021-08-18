@@ -1,5 +1,7 @@
 package personal.littelduck.collectnotification.notification;
 
+import android.content.Intent;
+import android.os.IBinder;
 import android.service.notification.NotificationListenerService;
 import android.service.notification.StatusBarNotification;
 import android.util.Log;
@@ -12,6 +14,12 @@ public class MyNotificationListenerService extends NotificationListenerService {
     public void onCreate() {
         super.onCreate();
         Log.i(TAG, "[onCreate]");
+    }
+
+    @Override
+    public IBinder onBind(Intent intent) {
+        Log.i(TAG, "[onBind]");
+        return super.onBind(intent);
     }
 
     @Override
