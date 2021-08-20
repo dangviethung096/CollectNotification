@@ -6,4 +6,15 @@
     <string name="stop_service">Dừng dịch vụ</string>
 
     <string name="service_status">Trạng thái dịch vụ:</string>
+
+    <string name="ok">Đồng ý</string>
+    <string name="cancel">Hủy</string>
+    
+    <string name="privilege">Quyền sử dụng</string>
+    <string name="privilege_requirement">Hãy cấp quyền sử dụng dưới đây để ứng dụng hoạt động bình thường</string>
+
+    <string name="on">Đang Bật</string>
+    <string name="off">Đang Tắt</string>
+    <string name="test_date">11:05 12/12</string>
+    <string name="test_string">This is a test STRING</string>
 </resources>

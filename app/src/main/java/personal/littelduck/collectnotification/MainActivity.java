@@ -1,7 +1,9 @@
 package personal.littelduck.collectnotification;
 
+import android.app.AlertDialog;
 import android.content.ComponentName;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.content.pm.PackageManager;
 import android.os.Bundle;
 import android.provider.Settings;
@@ -9,17 +11,23 @@ import android.text.TextUtils;
 import android.util.Log;
 import android.view.View;
 import androidx.annotation.NonNull;
+
+import personal.littelduck.collectnotification.adapter.StatusAdapter;
 import personal.littelduck.collectnotification.base_object.BaseActivity;
-import personal.littelduck.collectnotification.base_object.BaseAlertDialog;
+import personal.littelduck.collectnotification.broadcast_receiver.NotificationBroadcastReceiver;
+import personal.littelduck.collectnotification.common_object.Status;
 import personal.littelduck.collectnotification.databinding.ActivityMainBinding;
 import personal.littelduck.collectnotification.notification.MyNotificationListenerService;
 
 public class MainActivity extends BaseActivity {
     private ActivityMainBinding binding;
     private static final String ENABLED_NOTIFICATION_LISTENERS = "enabled_notification_listeners";
+    private static final String ACTION_NOTIFICATION_LISTENER_SETTINGS = "android.settings.ACTION_NOTIFICATION_LISTENER_SETTINGS";
+    private static StatusAdapter statusAdapter;
 
     public MainActivity() {
         TAG = MainActivity.class.getCanonicalName();
+        statusAdapter = new StatusAdapter();
     }
 
     @Override
@@ -28,17 +36,32 @@ public class MainActivity extends BaseActivity {
         binding = ActivityMainBinding.inflate(getLayoutInflater());
         setContentView(binding.getRoot());
 
+        // Set listener
         binding.btStartService.setOnClickListener(btStartServiceListener);
+
+        // Show
+        if (isNotificationServiceEnabled() || isServiceStarted()) {
+            showStopService();
+        } else {
+            showStartService();
+        }
+
+        setRecyclerView();
+
+        // Receiver broadcast listener
+        NotificationBroadcastReceiver receiver = new NotificationBroadcastReceiver(this);
+        IntentFilter intentFilter = new IntentFilter();
+        intentFilter.addAction(getPackageName());
+        registerReceiver(receiver, intentFilter);
     }
 
-    private View.OnClickListener btStartServiceListener = (v) -> {
+    private final View.OnClickListener btStartServiceListener = (v) -> {
         Log.i(TAG, "[btStartServiceListener]");
         if (isNotificationServiceEnabled()) {
             startNotificationListenerService();
         } else {
-            BaseAlertDialog.Builder dialogBuilder = new BaseAlertDialog.Builder(getApplicationContext());
+            showPrivilegeDialog();
         }
-
     };
 
 
@@ -81,4 +104,62 @@ public class MainActivity extends BaseActivity {
         }
         return false;
     }
+
+    private boolean isServiceStarted() {
+        return true;
+    }
+
+    private void showPrivilegeDialog() {
+        AlertDialog.Builder dialogBuilder = new AlertDialog.Builder(_self);
+        dialogBuilder.setTitle(R.string.privilege);
+        dialogBuilder.setMessage(R.string.privilege_requirement);
+        dialogBuilder.setPositiveButton(R.string.ok, (dialog, which) -> {
+            startActivity(new Intent(ACTION_NOTIFICATION_LISTENER_SETTINGS));
+        });
+
+        dialogBuilder.setNegativeButton(R.string.cancel, (dialog, which) -> {
+
+        });
+
+        AlertDialog dialog = dialogBuilder.create();
+        dialog.show();
+    }
+
+    private void showStartService() {
+        binding.btStartService.setVisibility(View.VISIBLE);
+        binding.btStopService.setVisibility(View.GONE);
+        binding.tvStatus.setText(R.string.off);
+    }
+
+    private void showStopService() {
+        binding.btStopService.setVisibility(View.VISIBLE);
+        binding.btStartService.setVisibility(View.GONE);
+        binding.tvStatus.setText(R.string.on);
+    }
+
+    public void processNotificationCode(MyNotificationListenerService.BroadcastCode broadcastCode) {
+        Log.i(TAG, "[processNotificationCode]");
+        Status status;
+        switch (broadcastCode.code) {
+            case MyNotificationListenerService.Code.ON_CREATED:
+                status = new Status();
+
+                break;
+            case MyNotificationListenerService.Code.ON_BIND:
+                break;
+            case MyNotificationListenerService.Code.LISTENER_CONNECTED:
+                break;
+            case MyNotificationListenerService.Code.LISTENER_DISCONNECTED:
+                break;
+            case MyNotificationListenerService.Code.ON_DESTROY:
+                break;
+            case MyNotificationListenerService.Code.NEW_NOTIFICATION:
+                break;
+        }
+    }
+
+    public void setRecyclerView() {
+        binding.rvLog.setAdapter(statusAdapter);
+    }
+
 }
